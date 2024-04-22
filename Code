@@ -1,0 +1,59 @@
+import requests
+from bs4 import BeautifulSoup
+import re
+import tkinter as tk
+from tkinter import messagebox
+
+def descargar_mod(url_pagina_mod):
+    # Hacer la solicitud GET a la página del mod
+    response = requests.get(https://www.nexusmods.com/newvegas/mods/55274)
+    
+    # Comprobar si la solicitud fue exitosa
+    if response.status_code == 200:
+        # Crear el objeto BeautifulSoup para analizar el HTML
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Encontrar todos los enlaces en la página
+        enlaces = soup.find_all('a', href=True)
+        
+        # Buscar el enlace que contiene el archivo ".esp"
+        for enlace in enlaces:
+            if enlace['href'].endswith('.esp'):
+                # Descargar el archivo ".esp"
+                url_descarga = enlace['href']
+                nombre_archivo = re.findall(r'[^/]+(?=\?|$)', url_descarga)[-1]  # Obtener el nombre del archivo de la URL
+                response_archivo = requests.get(url_descarga)
+                
+                # Comprobar si la descarga fue exitosa
+                if response_archivo.status_code == 200:
+                    with open(nombre_archivo, 'wb') as f:
+                        f.write(response_archivo.content)
+                    
+                    messagebox.showinfo("Descarga exitosa", f"El archivo '{nombre_archivo}' ha sido descargado exitosamente.")
+                else:
+                    messagebox.showerror("Error", "Error al descargar el archivo.")
+                break
+        else:
+            messagebox.showerror("Error", "No se encontraron enlaces de descarga en la página.")
+    else:
+        messagebox.showerror("Error", "Error al hacer la solicitud a la página del mod.")
+
+def descargar_mod_interfaz():
+    url_mod = entrada_url.get()
+    descargar_mod(url_mod)
+
+# Crear la ventana principal
+ventana = tk.Tk()
+ventana.title("Descargar Mod")
+
+# Crear etiqueta y entrada para la URL del mod
+tk.Label(ventana, text="URL del Mod:").pack()
+entrada_url = tk.Entry(ventana, width=50)
+entrada_url.pack()
+
+# Crear botón de descarga
+boton_descargar = tk.Button(ventana, text="Descargar Mod", command=descargar_mod_interfaz)
+boton_descargar.pack()
+
+# Ejecutar el bucle de eventos de la interfaz
+ventana.mainloop()
